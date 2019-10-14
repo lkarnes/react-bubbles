@@ -8,10 +8,9 @@ const initialColor = {
 };
 
 const ColorList = (props) => {
-  console.log(props.history)
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
-  const [newColors, setNewColors] = useState(props.colors);
+  const [newColor, setNewColor] = useState(initialColor);
   const editColor = color => {
     setEditing(true);
     setColorToEdit(color);
@@ -22,7 +21,6 @@ const ColorList = (props) => {
     axiosWithAuth()
     .put(`http://localhost:5000/api/colors/${colorToEdit.id}`, colorToEdit)
     .then(res=>{
-      console.log(res)
       props.updateColors(props.colors.map(color => {
         if(color.id === colorToEdit.id){
           return colorToEdit
@@ -47,6 +45,30 @@ const ColorList = (props) => {
     // make a delete request to delete this color
   };
 
+  const handleChange = e => {
+    console.log(e.target.name)
+    setNewColor({
+      ...newColor,
+      [e.target.name]: e.target.value
+    })
+  }
+  const handleChangeHex = e => {
+    setNewColor({
+      ...newColor,
+      code:{[e.target.name]: e.target.value}
+    })
+  }
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    axiosWithAuth()
+    .post(`/api/colors`, newColor)
+    .then(res=>{
+      console.log(res)
+      props.updateColors(res.data)
+      setNewColor(initialColor)
+    })
+  }
   return (
     <div className="colors-wrap">
       <p>colors</p>
@@ -98,6 +120,11 @@ const ColorList = (props) => {
       )}
       <div className="spacer" />
       {/* stretch - build another form here to add a color */}
+      <form onSubmit={handleSubmit}>
+        <input type='text' name='color' value={newColor.color} placeholder='color' onChange={handleChange}/>
+        <input type='text' name='hex' value={newColor.code.hex} placeholder='hex' onChange={handleChangeHex}/>
+        <button type='submit'>Submit</button>
+      </form>
     </div>
   );
 };
