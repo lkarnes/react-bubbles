@@ -22,6 +22,7 @@ const ColorList = (props) => {
     axiosWithAuth()
     .put(`http://localhost:5000/api/colors/${colorToEdit.id}`, colorToEdit)
     .then(res=>{
+      console.log(res)
       props.updateColors(props.colors.map(color => {
         if(color.id === colorToEdit.id){
           return colorToEdit
@@ -41,7 +42,7 @@ const ColorList = (props) => {
     axiosWithAuth()
     .delete(`/api/colors/${color.id}`)
     .then(res=>{
-      document.location.reload();
+      props.updateColors(props.colors.filter(data=> data.id !== color.id))
     })
     // make a delete request to delete this color
   };
