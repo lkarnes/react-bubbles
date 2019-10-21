@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { axiosWithAuth } from "./utils/axiosWithAuth";
 
 const initialColor = {
   color: "",
   code: { hex: "" }
 };
 
-const ColorList = ({ colors, updateColors }) => {
-  console.log(colors);
+const ColorList = (props) => {
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
-
+  const [newColor, setNewColor] = useState(initialColor);
   const editColor = color => {
     setEditing(true);
     setColorToEdit(color);
@@ -18,20 +18,62 @@ const ColorList = ({ colors, updateColors }) => {
 
   const saveEdit = e => {
     e.preventDefault();
+    axiosWithAuth()
+    .put(`http://localhost:5000/api/colors/${colorToEdit.id}`, colorToEdit)
+    .then(res=>{
+      props.updateColors(props.colors.map(color => {
+        if(color.id === colorToEdit.id){
+          return colorToEdit
+        }else 
+          return color
+      }));
+    })
+    .catch(err=>{
+      console.log('error found',err)
+    })
     // Make a put request to save your updated color
     // think about where will you get the id from...
     // where is is saved right now?
   };
 
   const deleteColor = color => {
+    axiosWithAuth()
+    .delete(`/api/colors/${color.id}`)
+    .then(res=>{
+      props.updateColors(props.colors.filter(data=> data.id !== color.id))
+    })
     // make a delete request to delete this color
   };
 
+  const handleChange = e => {
+    console.log(e.target.name)
+    setNewColor({
+      ...newColor,
+      [e.target.name]: e.target.value
+    })
+  }
+  const handleChangeHex = e => {
+    setNewColor({
+      ...newColor,
+      code:{[e.target.name]: e.target.value}
+    })
+  }
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    axiosWithAuth()
+    .post(`/api/colors`, newColor)
+    .then(res=>{
+      console.log(res)
+      props.updateColors(res.data)
+      setNewColor(initialColor)
+    })
+  }
   return (
     <div className="colors-wrap">
       <p>colors</p>
       <ul>
-        {colors.map(color => (
+        {props.colors.map(color => (
           <li key={color.color} onClick={() => editColor(color)}>
             <span>
               <span className="delete" onClick={() => deleteColor(color)}>
@@ -78,6 +120,11 @@ const ColorList = ({ colors, updateColors }) => {
       )}
       <div className="spacer" />
       {/* stretch - build another form here to add a color */}
+      <form onSubmit={handleSubmit}>
+        <input type='text' name='color' value={newColor.color} placeholder='color' onChange={handleChange}/>
+        <input type='text' name='hex' value={newColor.code.hex} placeholder='hex' onChange={handleChangeHex}/>
+        <button type='submit'>Submit</button>
+      </form>
     </div>
   );
 };
